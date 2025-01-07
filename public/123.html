@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCU위키 - List</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Entries List</h1>
+    <nav>
+        <a href="/">Home</a> | <a href="/write">Write</a>
+    </nav>
+    <div id="entries"></div>
+    <script>
+        fetch("/data/entries.json")
+            .then((response) => response.json())
+            .then((entries) => {
+                const container = document.getElementById("entries");
+                entries.forEach((entry, index) => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `<h3>Entry ${index + 1}</h3><p>${entry.content}</p>`;
+                    container.appendChild(div);
+                });
+            });
+    </script>
+</body>
+</html>
