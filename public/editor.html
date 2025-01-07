@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom CKEditor-like Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+        #editor-container {
+            width: 80%;
+            margin: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #fff;
+        }
+        #toolbar {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            padding: 8px;
+            background: #eee;
+        }
+        #toolbar button {
+            margin-right: 8px;
+            padding: 8px 12px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #toolbar button:hover {
+            background: #0056b3;
+        }
+        #editor {
+            min-height: 300px;
+            padding: 12px;
+            outline: none;
+        }
+        #footnotes-container {
+            margin-top: 20px;
+            width: 80%;
+        }
+        #footnotes-container input, #footnotes-container textarea {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #footnotes-container button {
+            padding: 10px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #footnotes-container button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Custom Editor</h1>
+<div id="editor-container">
+    <div id="toolbar">
+        <button onclick="execCmd('bold')">Bold</button>
+        <button onclick="execCmd('italic')">Italic</button>
+        <button onclick="execCmd('underline')">Underline</button>
+        <button onclick="execCmd('strikeThrough')">Strike</button>
+        <button onclick="execCmd('insertUnorderedList')">Bullet List</button>
+        <button onclick="execCmd('insertOrderedList')">Numbered List</button>
+        <button onclick="execCmd('justifyLeft')">Align Left</button>
+        <button onclick="execCmd('justifyCenter')">Center</button>
+        <button onclick="execCmd('justifyRight')">Align Right</button>
+        <button onclick="execCmd('createLink')">Insert Link</button>
+        <button onclick="execCmd('unlink')">Remove Link</button>
+        <button onclick="insertImage()">Insert Image</button>
+        <button onclick="insertHeading('h2')">H2</button>
+        <button onclick="insertHeading('h3')">H3</button>
+        <button onclick="insertHeading('h4')">H4</button>
+        <button onclick="addFootnote()">Add Footnote</button>
+        <button onclick="insertHorizontalRule()">Horizontal Rule</button>
+        <button onclick="insertLineBreak()">Line Break</button>
+    </div>
+    <div id="editor" contenteditable="true">
+        <p>Start editing...</p>
+    </div>
+</div>
+
+<div id="footnotes-container">
+    <h2>Footnotes</h2>
+    <input type="text" id="footnote-title" placeholder="Footnote Title">
+    <textarea id="footnote-content" placeholder="Footnote Content"></textarea>
+    <button onclick="insertFootnote()">Insert Footnote</button>
+</div>
+
+<div id="info-container">
+    <h2>Tag Information</h2>
+    <ul>
+        <li><b>&lt;b&gt;:</b> Text is made bold. Deprecated since HTML 4.01 as it provides visual effects without semantic meaning. Use <strong>&lt;strong&gt;</strong> for emphasis or CSS <code>font-weight: bold;</code>.</li>
+        <li><b>&lt;i&gt;:</b> Text is italicized. Commonly used for technical terms, foreign words, or phrases. Semantic meaning can vary.</li>
+        <li><b>&lt;strong&gt;:</b> Denotes strong emphasis on text. Often rendered as bold, but with semantic significance.</li>
+        <li><b>&lt;em&gt;:</b> Represents a lower degree of emphasis compared to <strong>&lt;strong&gt;</strong>. Commonly rendered as italicized text.</li>
+        <li><b>&lt;br&gt;:</b> Inserts a line break. Useful for breaking lines without starting a new paragraph.</li>
+        <li><b>&lt;hr&gt;:</b> Inserts a horizontal rule, often used to separate sections of content.</li>
+        <li><b>&lt;ul&gt;:</b> Creates an unordered (bulleted) list.</li>
+        <li><b>&lt;ol&gt;:</b> Creates an ordered (numbered) list.</li>
+        <li><b>&lt;li&gt;:</b> Represents a list item. Used within <code>&lt;ul&gt;</code> or <code>&lt;ol&gt;</code> tags.</li>
+    </ul>
+</div>
+
+<script>
+    function execCmd(command) {
+        if (command === 'createLink') {
+            const url = prompt('Enter the URL:');
+            document.execCommand(command, false, url);
+        } else {
+            document.execCommand(command, false, null);
+        }
+    }
+
+    function insertImage() {
+        const url = prompt('Enter the image URL:');
+        if (url) {
+            const img = `<a href="${url}" target="_blank"><img src="${url}" alt="Image" style="max-width: 100%;"></a>`;
+            document.execCommand('insertHTML', false, img);
+        }
+    }
+
+    function insertHeading(tag) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const heading = document.createElement(tag);
+            heading.textContent = "New " + tag.toUpperCase() + " Heading";
+            range.deleteContents();
+            range.insertNode(heading);
+        }
+    }
+
+    function addFootnote() {
+        const footnoteIndex = document.querySelectorAll('.footnote').length + 1;
+        const footnoteMarker = `<sup class="footnote" data-footnote="footnote-${footnoteIndex}">[${footnoteIndex}]</sup>`;
+        document.execCommand('insertHTML', false, footnoteMarker);
+    }
+
+    function insertFootnote() {
+        const title = document.getElementById('footnote-title').value;
+        const content = document.getElementById('footnote-content').value;
+        const footnotesSection = document.createElement('div');
+
+        if (title && content) {
+            footnotesSection.innerHTML = `<h3>${title}</h3><p>${content}</p>`;
+            document.body.appendChild(footnotesSection);
+            document.getElementById('footnote-title').value = '';
+            document.getElementById('footnote-content').value = '';
+        } else {
+            alert('Please fill in both the title and content for the footnote.');
+        }
+    }
+
+    function insertHorizontalRule() {
+        document.execCommand('insertHorizontalRule', false, null);
+    }
+
+    function insertLineBreak() {
+        document.execCommand('insertHTML', false, '<br>');
+    }
+</script>
+
+</body>
+</html>
